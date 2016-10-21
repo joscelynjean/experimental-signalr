@@ -1,0 +1,179 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat client</title>
+	<meta charset="utf-8" />
+
+    <!--Import Google Icon Font-->
+    <link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/css/materialize.min.css">
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <script src="scripts/jquery.signalR-2.2.1.js"></script>
+    <script src="http://localhost:8082/signalr/hubs"></script>
+
+</head>
+<body class="">
+
+    <!-- Dropdown Structure -->
+    <ul id="dropdown_status" class="dropdown-content">
+        <li><a href="#!" onclick="updateStatus(1);"><i class="material-icons left">mood</i>Available</a></li>
+        <li><a href="#!" onclick="updateStatus(0);"><i class="material-icons left">do_not_disturb</i>Busy</a></li>
+    </ul>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-wrapper blue lighten-2">
+            <a href="#!" class="brand-logo center">Chat</a>
+            <ul id="nav-mobile" class="right hide-on-med-and-down">
+                <li><a id="username_information" href="#!"><i class="material-icons left">account_circle</i><span>No name</span></a></li>
+                <li><a id="user_status" class="dropdown-button" href="#!" data-constrainwidth="false" data-activates="dropdown_status"><i class="material-icons left">mood</i><span>Available</span><i class="material-icons right">arrow_drop_down</i></a></li>
+                <li><a href="#!" onclick="closeChat();"><i class="material-icons">close</i></a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Modal Structure for identification -->
+    <div id="modal_identification" class="modal">
+        <div class="modal-content">
+            <h4 style="padding-bottom: 30px;">Identify yourself</h4>
+            <form>
+                <div class="input-field">
+                    <input id="username" type="text" class="validate">
+                    <label for="username">What is your name?</label>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <a href="#!" class=" modal-action modal-close waves-effect waves-green btn-flat">Go to chat!</a>
+        </div>
+    </div>
+
+    <!-- Modal Structure for close -->
+    <div id="modal_close" class="modal">
+        <div class="modal-content">
+            <h4 style="padding-bottom: 30px;">Thank you for using the chat!</h4>
+        </div>
+    </div>
+
+    <div class="container" style="padding-top: 40px;">
+        <div class="row">
+            <div class="col s4">
+                <ul id="userList" class="collection">
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Compiled and minified JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/js/materialize.min.js"></script>
+
+    <script>
+
+        // Configuration
+        var configuration = {
+            "baseUrl": "http://localhost:8082"
+        };
+
+        // User information
+        var userInfo = {
+            "username" : "No name"
+        };
+
+        var userHub;
+
+        $(document).ready(function () {
+
+            // Open dialog for authentication
+            $('#modal_identification').openModal({
+                dismissible: false, // Modal can be dismissed by clicking outside of the modal
+                opacity: 1, // Opacity of modal background
+                in_duration: 0, // Transition in duration
+                out_duration: 200, // Transition out duration
+                starting_top: '4%', // Starting top style attribute
+                ending_top: '10%', // Ending top style attribute
+                complete: function () {
+                    userInfo.username = $('#username').val();
+                    initChat();
+                } // Callback for Modal close
+            });
+
+        });
+
+        // Refresh user list
+        function onRefreshUserList() {
+            var uri = configuration.baseUrl + '/api/users';
+            $.getJSON(uri).done(function (data) {
+
+                var userList = $("#userList");
+                userList.empty(); // Empty the list
+
+                $.each(data, function (key, item) {
+                    var user = $('<a/>')
+                        .addClass('collection-item')
+                        .attr('href', '#!')
+                        .text(item.Username)
+                        .append($('<i/>')
+                            .addClass('material-icons left')
+                            .text(getIconNameForStatus(item.Status))
+                        );
+
+                    user.appendTo(userList);
+                });
+            });
+        }
+
+        // Initialisation function after identification to launch everything
+        function initChat() {
+            $('#username_information span').text(userInfo.username);
+
+            $.connection.hub.url = 'http://localhost:8082/signalr';
+            userHub = $.connection.user;
+            userHub.client.refreshUserList = onRefreshUserList;
+
+            $.connection.hub.start().done(function () {
+                userHub.server.registerUser(userInfo.username);
+            });
+        };
+
+        // Update the status
+        function updateStatus(status) {
+            $('#user_status i:first').text(getIconNameForStatus(status));
+            $('#user_status span').text(getTextForStatus(status));
+            userHub.server.updateStatus(status);
+        }
+        function getIconNameForStatus(status) {
+            switch (status) {
+                case 0: return "do_not_disturb";
+                case 1: return "mood";
+                default: return "mood";
+            }
+        }
+        function getTextForStatus(status) {
+            switch (status) {
+                case 0: return "Busy";
+                case 1: return "Available";
+                default: return "Available";
+            }
+        }
+
+        // Close function when quit chat
+        function closeChat() {
+
+            // Open dialog for authentication
+            $('#modal_close').openModal({
+                dismissible: false, // Modal can be dismissed by clicking outside of the modal
+                opacity: 1, // Opacity of modal background
+                in_duration: 0.1, // Transition in duration
+                out_duration: 200, // Transition out duration
+                starting_top: '4%', // Starting top style attribute
+                ending_top: '10%', // Ending top style attribute
+            });
+
+            $.connection.hub.stop();
+        };
+
+    </script>
+
+</body>
+</html>
