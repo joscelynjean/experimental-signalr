@@ -1,6 +1,6 @@
-# R&D Using SignalR
+# Experimenting SignalR
 
-This project is a small proof of concept using SignalR to have general and private chats. We identify ourself and then, we are part of the list of available person available for chat.
+This project is a simple experimentation of SignalR. Basically, we are building a chat system that is running in-memory on the server side.
 
 Objectives :
 
@@ -54,3 +54,5 @@ I used WebAPI in the same solution and I had to adjust the CORS also but both co
 Also, I removed this from the WebAPIConfig.cs :
 
     config.EnableCors(new EnableCorsAttribute("*", "*", "*"));
+
+**Note : Since this is an experimentation, I didn't bother with the cors but this part must be adjust to whitelist only the hostnames that can access the services.**
