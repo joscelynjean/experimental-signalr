@@ -55,7 +55,7 @@ Also, I removed this from the WebAPIConfig.cs :
 
     config.EnableCors(new EnableCorsAttribute("*", "*", "*"));
 
-**Note : Since this is an experimentation, I didn't bother with the cors but this part must be adjust to whitelist only the hostnames that can access the services.**
+Note : Since this is an experimentation, I didn't bother with the cors but this part must be adjust to whitelist only the hostnames that can access the services.
 
 #### Access-Control-Allow-Origin of '*' not available while credentials flag is true
 
