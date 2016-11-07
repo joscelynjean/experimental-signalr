@@ -131,7 +131,7 @@
             userHub = $.connection.user;
             userHub.client.refreshUserList = onRefreshUserList;
 
-            $.connection.hub.start().done(function () {
+            $.connection.hub.start({ withCredentials: false }).done(function () {
                 userHub.server.registerUser(userInfo.username);
             });
         };
