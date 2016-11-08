@@ -13,8 +13,30 @@
     <script src="scripts/jquery.signalR-2.2.1.js"></script>
     <script src="http://localhost:8082/signalr/hubs"></script>
 
+    <style>
+        footer {
+            padding: 0px;
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            min-height: 80px;
+        }
+
+        #user-connected-section {
+            overflow:hidden;
+            overflow-y:scroll;
+        }
+
+        #conversation-section {
+            overflow:hidden;
+            overflow-y:scroll;
+        }
+
+    </style>
+
 </head>
-<body class="">
+<body class="blue-grey lighten-5">
 
     <!-- Dropdown Structure -->
     <ul id="dropdown_status" class="dropdown-content">
@@ -45,7 +67,7 @@
             </form>
         </div>
         <div class="modal-footer">
-            <a href="#!" class=" modal-action modal-close waves-effect waves-green btn-flat">Go to chat!</a>
+            <a href="#!" class="modal-action modal-close waves-effect waves-green btn-flat">Go to chat!</a>
         </div>
     </div>
 
@@ -59,11 +81,35 @@
     <div class="container" style="padding-top: 40px;">
         <div class="row">
             <div class="col s4">
-                <ul id="userList" class="collection">
-                </ul>
+                <!-- User connected section -->
+                <div id="user-connected-section" class="card-panel">
+                    <h5>Connected</h5>
+                    <ul style="border: 0;" id="userList" class="collection"></ul>
+                </div>
+            </div>
+            <div class="col s8">
+                <!-- Conversation section -->
+                <div id="conversation-section" class="card-panel">
+                    <h5>Conversation</h5>
+                    <ul id="conversation"></ul>
+                </div>
             </div>
         </div>
     </div>
+
+    <footer class="blue lighten-4">
+        <div class="container">
+            <div class="row valign-wrapper">
+                <div class="input-field col s10">
+                    <textarea id="message" class="materialize-textarea"></textarea>
+                    <label for="message">Type your message...</label>
+                </div>
+                <div class="col s2 valign">
+                    <a class="waves-effect waves-light btn" onclick="sendMessage();"><i class="material-icons left">send</i>Send</a>
+                </div>
+            </div>
+        </div>
+    </footer>
 
     <!-- Compiled and minified JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.7/js/materialize.min.js"></script>
@@ -80,7 +126,9 @@
             "username" : "No name"
         };
 
+        // Different hubs
         var userHub;
+        var conversationHub;
 
         $(document).ready(function () {
 
@@ -123,13 +171,28 @@
             });
         }
 
+        // Update conversation
+        function onConversationUpdate(messageInformation) {
+
+            var conversation = $("#conversation");
+            var newMessage = $('<li/>')
+                .text(messageInformation.Message);
+            newMessage.appendTo(conversation);
+        }
+
         // Initialisation function after identification to launch everything
         function initChat() {
             $('#username_information span').text(userInfo.username);
 
             $.connection.hub.url = 'http://localhost:8082/signalr';
+
+            // Setup of user hub
             userHub = $.connection.user;
             userHub.client.refreshUserList = onRefreshUserList;
+
+            // Setup of conversation hub
+            conversationHub = $.connection.conversation;
+            conversationHub.client.updateConversation = onConversationUpdate;
 
             $.connection.hub.start({ withCredentials: false }).done(function () {
                 userHub.server.registerUser(userInfo.username);
@@ -172,6 +235,31 @@
 
             $.connection.hub.stop();
         };
+
+        function sendMessage() {
+            var message = $("#message").val();
+            var messageInformation = {
+                "message": message
+            };
+
+            conversationHub.server.receiveMessage(messageInformation)
+
+            // Empty the textarea and resize
+            $('#message').val('');
+            $('#message').trigger('autoresize');
+        }
+
+        // Allow height adjustment of user connected and conversation section
+        function adjustHeight() {
+            var elementHeight = $(window).height() - $("header").height() - $("footer").height() - 200;
+
+            $("#user-connected-section").css("height", elementHeight);
+            $("#conversation-section").css("height", elementHeight);
+        }
+
+        // Resize element depending on browser window
+        adjustHeight();
+        $(window).resize(adjustHeight());
 
     </script>
 
