@@ -33,6 +33,21 @@
             overflow-y:scroll;
         }
 
+        #conversation-section ul li {
+            background-color: #bbdefb; /* blue lighten-4 */
+            border-radius: 8px;
+            padding: 8px;
+            margin-right: 10px;
+            margin-top: 12px;
+            margin-bottom: 12px;
+        }
+
+        #conversation-section ul li.own-message{
+            background-color: #e3f2fd; /* blue lighten-5 */
+            margin-right: 0px;
+            margin-left: 10px;
+        }
+
     </style>
 
 </head>
@@ -176,8 +191,11 @@
 
             var conversation = $("#conversation");
             var newMessage = $('<li/>')
-                .text(messageInformation.Message);
+                .text(messageInformation.Message)
+                .addClass( function () { return messageInformation.UserInfo.Username === userInfo.username ? "own-message" : "" });
             newMessage.appendTo(conversation);
+
+            conversation.scrollTop = conversation.scrollHeight;
         }
 
         // Initialisation function after identification to launch everything
@@ -239,7 +257,8 @@
         function sendMessage() {
             var message = $("#message").val();
             var messageInformation = {
-                "message": message
+                "message": message,
+                "userInfo": userInfo
             };
 
             conversationHub.server.receiveMessage(messageInformation)

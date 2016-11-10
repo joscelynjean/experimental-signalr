@@ -8,5 +8,6 @@ namespace chat_server.Models
     public class MessageInformation
     {
         public String Message { get; set; }
+        public UserInfo UserInfo { get; set; }
     }
 }
